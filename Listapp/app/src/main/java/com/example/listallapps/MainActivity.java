@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -84,13 +85,13 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 String package_clicked = apps.get(i).getPackageName();
                 Toast.makeText(MainActivity.this, package_clicked, Toast.LENGTH_SHORT).show();
-                // DO SOMETHING WITH THIS DATA
-                //
-                //
-                //
 
+                try {
+                    Runtime.getRuntime().exec("setprop package_name " + package_clicked);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-
         });
     }
 
