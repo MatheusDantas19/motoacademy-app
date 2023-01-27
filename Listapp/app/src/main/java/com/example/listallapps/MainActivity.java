@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,62 +18,49 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     ListView listView;
-    TextView text;
     App app;
+    ArrayList<App> apps;
     AppAdapter adaptador;
-    List<String> apps;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // initialise layout
-        listView = findViewById(R.id.listview);
-        text = findViewById(R.id.totalapp);
+        // Setta o Package Manager
+        PackageManager pm = this.getPackageManager();
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String package_clicked = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA).get(i).packageName;
-                Toast.makeText(MainActivity.this, package_clicked, Toast.LENGTH_SHORT).show();
-                // DO SOMETHING WITH THIS INFORMATION
-                //
-                //
-                //
+        // Cria uma intent que contenha categorias 'acao' e 'launcher' (executavel)
+        Intent main=new Intent(Intent.ACTION_MAIN, null);
+        main.addCategory(Intent.CATEGORY_LAUNCHER);
 
-            }
+        // Retorno todos os apps/packs que cumprem as condicoes da intent
+        List<ResolveInfo> launchables=pm.queryIntentActivities(main, 0);
 
-        });
-    }
-
-
-
-
-
-    public void getallapps(View view) {
-        // get list of all the apps installed
-        List<ApplicationInfo> infos = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
-        List<PackageInfo> packList = getPackageManager().getInstalledPackages(0);
-        Log.i("Checking: infos and packList are the same size", String.valueOf(infos.size() == packList.size()));
-        // create a list with size of total number of apps
 
         adaptador = new AppAdapter(getApplicationContext(), R.layout.celula);
+        apps      = new ArrayList<>();
 
-        for (int i = 0; i < packList.size(); i++) {
-            String pack_name = infos.get(i).packageName;
-            PackageInfo packInfo = packList.get(i);
-            String app_name = packInfo.applicationInfo.loadLabel(getPackageManager()).toString();
+        Collections.sort(launchables,
+                new ResolveInfo.DisplayNameComparator(pm));
 
-            app = new App(app_name, pack_name);
+        // Percorro por todos os arquivos ResolveInfo para extrair nome, pacote e icone.
+        for (ResolveInfo rInfo : launchables) {
+
+            String appname = rInfo.activityInfo.applicationInfo.loadLabel(pm).toString();
+            String packname = rInfo.activityInfo.packageName;
+
+            app = new App(appname, packname);
 
             try
             {
-                Drawable d = getPackageManager().getApplicationIcon(pack_name);
+                Drawable d = getPackageManager().getApplicationIcon(packname);
                 app.setIcon(d);
             }
             catch (PackageManager.NameNotFoundException e)
@@ -80,14 +68,30 @@ public class MainActivity extends AppCompatActivity {
 
             }
             adaptador.add(app);
-
+            apps.add(app);
 
         }
 
-        // set all the apps name in list view
+        // initializa o listView
+        listView = findViewById(R.id.listview);
+
+        // seta todos os apps na list view
         listView.setAdapter(adaptador);
-        // write total count of apps available.
-        text.setText(infos.size() + " Apps are installed");
+
+        // Action by on click listview item
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String package_clicked = apps.get(i).getPackageName();
+                Toast.makeText(MainActivity.this, package_clicked, Toast.LENGTH_SHORT).show();
+                // DO SOMETHING WITH THIS DATA
+                //
+                //
+                //
+
+            }
+
+        });
     }
 
 
