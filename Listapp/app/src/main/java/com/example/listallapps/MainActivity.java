@@ -42,8 +42,7 @@ public class MainActivity extends AppCompatActivity {
         main.addCategory(Intent.CATEGORY_LAUNCHER);
 
         // Retorno todos os apps/packs que cumprem as condicoes da intent
-        List<ResolveInfo> launchables=pm.queryIntentActivities(main, 0);
-
+        List<ResolveInfo> launchables = pm.queryIntentActivities(main, 0);
 
         adaptador = new AppAdapter(getApplicationContext(), R.layout.celula);
         apps      = new ArrayList<>();
@@ -53,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Percorro por todos os arquivos ResolveInfo para extrair nome, pacote e icone.
         for (ResolveInfo rInfo : launchables) {
-
             String appname = rInfo.activityInfo.applicationInfo.loadLabel(pm).toString();
             String packname = rInfo.activityInfo.packageName;
 
@@ -66,11 +64,10 @@ public class MainActivity extends AppCompatActivity {
             }
             catch (PackageManager.NameNotFoundException e)
             {
-
             }
+
             adaptador.add(app);
             apps.add(app);
-
         }
 
         // initializa o listView
@@ -84,10 +81,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 String package_clicked = apps.get(i).getPackageName();
-                Toast.makeText(MainActivity.this, package_clicked, Toast.LENGTH_SHORT).show();
+                String app_clicked     = apps.get(i).getName();
+                String message = "Aplicação " + app_clicked + " atribuída ao botão Custom Action.";
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
 
                 try {
                     Runtime.getRuntime().exec("setprop package_name " + package_clicked);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    Runtime.getRuntime().exec("setprop app_name " + app_clicked);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
